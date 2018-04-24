@@ -13,29 +13,22 @@ public:
         
         vector<int> view;
         
-        int currLevel = 1;
-        recurse(root, view, currLevel);
+        getRightView(root, 1, view);
         
         return view;
     }
     
-    void recurse(TreeNode* node, vector<int>& view, int& currLevel) {
+    void getRightView(TreeNode* node, int level, vector<int>& view) {
         
         if(node != nullptr) {
             
-            cout << " node: " << node->val << " currLevel: " << currLevel << endl;
-            
-            if(currLevel > view.size()) {
+            if(view.size() < level) {
                 
                 view.push_back(node->val);
             }
             
-                ++currLevel;
-                
-                recurse(node->right, view, currLevel);
-                recurse(node->left, view, currLevel);
-                
-                --currLevel;
+            getRightView(node->right, level + 1, view);
+            getRightView(node->left, level + 1, view);
         }
     }
 };

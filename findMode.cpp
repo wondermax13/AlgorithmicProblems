@@ -10,72 +10,81 @@
 class Solution {
 public:
     vector<int> findMode(TreeNode* root) {
+     
+        unordered_map<int, int> counts;
         
-        vector<int> res;
         
-        int lastVal = -1;
-        int count = 0, maxCount = 0;
+        populateCounts(root, counts);
         
-        recurseInorder(root, lastVal, count, maxCount, res);
+        int maxCount = 0;
+        vector<int> modes;
         
-        return res;
-    }
-
-    //MORRIS TRAVERSAL !!! IMPORTANT
-    private void inorder(TreeNode root) {
-        TreeNode node = root;
-        while (node != null) {
-            if (node.left == null) {
-                handleValue(node.val);
-                node = node.right;
-            } else {
-                TreeNode prev = node.left;
-                while (prev.right != null && prev.right != node)
-                    prev = prev.right;
-                if (prev.right == null) { //CASE BEFORE MODIFYING THE TREE
-                    prev.right = node;
-                    node = node.left;
-                } else {                  //CASE AFTER REVERTING THE TREE (HERE PREV.RIGHT == NODE)
-                    prev.right = null;
-                    handleValue(node.val);
-                    node = node.right;
-                }
+        for(auto p : counts) {
+            
+            maxCount = max(maxCount, p.second);
+        }
+        
+        for(auto p : counts) {
+            
+            if(maxCount == p.second) {
+                modes.push_back(p.first);
             }
+        }
+        
+        int currVal = INT_MAX, currCount = 0, currMax = 0;
+        
+        populateMaxs(root, currVal, currCount, currMax, modes);
+            
+        return modes;
+    }
+    
+    void populateCounts(
+        TreeNode* node, unordered_map<int, int>& counts) {
+        
+        if(node != nullptr) {
+            
+            counts[node->val]++;
+            
+            populateCounts(node->left, counts);
+            populateCounts(node->right, counts);
         }
     }
     
-    void recurseInorder(
-        TreeNode* node, int &lastVal, int& count,
-        int& maxCount, vector<int>& res) {
-            
+    void populateMaxs(
+        TreeNode* node, int& currVal, int& currCount, int& currMax, vector<int>& counts) {
+        
         if(node != nullptr) {
             
-            recurseInorder(node->left, lastVal, count, maxCount, res);
+            populateMaxs(node->left, currVal, currCount, currMax, counts);
             
-            //This won't fail if left most node is -1
-            //count = 1 > maxCount
-            //So res.push_back(-1)
-            if(node->val == lastVal) {
+            if(currVal == node->val) {
                 
-                ++count;
+                ++currCount;
+                
+                //currVal is part of counts
+                if(find(counts.begin(), counts.end(), node->val) != counts.end()) {
+                
+                    counts.clear();
+                    ++currMax;
+                
+                    counts.resize(1);
+                    counts[0] = node->val;
+                }
+                else {
+                    
+                    if(currCount == currMax) {
+                        
+                        counts.push_back(currVal);
+                    }
+                }
             }
             else {
-                lastVal = node->val;
-                count = 1;
+                currVal = node->val;
+                currCount = 1;
             }
             
-            if(count == maxCount) {
-                    
-                    res.push_back(node->val);
-            }
-            else if(count > maxCount) {
-                    
-                    res.clear();
-                    res.push_back(node->val);
-                    maxCount = count;
-            }
-            
-            recurseInorder(node->right, lastVal, count, maxCount, res);
+            populateMaxs(node->right, currVal, currCount, currMax, counts);
         }
+        
     }
 };
